@@ -1,109 +1,230 @@
-struc sInc
+struc sIns
     .str resb 8
     .len resq 1
+    .ins resb 1
 endstruc
 
-%define INSCNT 16
+%define INSCNT 31
 
 
 section .data
 
-INS_ARR         dq INS_START
-                dq INS_END
-                dq INS_BYTE
+INS_ARR         dq INS_BYTE
                 dq INS_WORD
                 dq INS_RESB
                 dq INS_RESW
+                dq INS_START
+                dq INS_END
+                dq INS_BASE
                 dq INS_LDA
                 dq INS_LDB
+                dq INS_LDCH
                 dq INS_LDX
                 dq INS_LDT
                 dq INS_STA
+                dq INS_STCH
                 dq INS_STX
                 dq INS_STL
                 dq INS_J
                 dq INS_JEQ
+                dq INS_JLT
                 dq INS_JSUB
+                dq INS_RSUB
+                dq INS_COMP
+                dq INS_TD
+                dq INS_RD
+                dq INS_WD
+                dq INS_TIX
+                dq INS_COMPR
+                dq INS_TIXR
+                dq INS_CLEAR
+                dq INS_PLDT
+                dq INS_PJSUB
 
-INS_START       istruc sInc
-                    at sInc.str, db "START", 0
-                    at sInc.len, dd 0
+INS_BYTE        istruc sIns
+                    at sIns.str, db "BYTE", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-INS_END         istruc sInc
-                    at sInc.str, db "END", 0
-                    at sInc.len, dd 0
+INS_WORD        istruc sIns
+                    at sIns.str, db "WORD", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-INS_BYTE        istruc sInc
-                    at sInc.str, db "BYTE", 0
-                    at sInc.len, dd 0
+INS_RESB        istruc sIns
+                    at sIns.str, db "RESB", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-INS_WORD        istruc sInc
-                    at sInc.str, db "WORD", 0
-                    at sInc.len, dd 0
+INS_RESW        istruc sIns
+                    at sIns.str, db "RESW", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-INS_RESB        istruc sInc
-                    at sInc.str, db "RESB", 0
-                    at sInc.len, dd 0
+INS_START       istruc sIns
+                    at sIns.str, db "START", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-INS_RESW        istruc sInc
-                    at sInc.str, db "REW", 0
-                    at sInc.len, dd 0
+INS_END         istruc sIns
+                    at sIns.str, db "END", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-
-INS_LDA        istruc sInc
-                    at sInc.str, db "LDA", 0
-                    at sInc.len, dd 3
+INS_BASE        istruc sIns
+                    at sIns.str, db "BASE", 0
+                    at sIns.len, dq 0
+                    at sIns.ins, db 0x00
                 iend
 
-INS_LDB        istruc sInc
-                    at sInc.str, db "LDB", 0
-                    at sInc.len, dd 3
+INS_LDA         istruc sIns
+                    at sIns.str, db "LDA", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x00
                 iend
 
-INS_LDX        istruc sInc
-                    at sInc.str, db "LDX", 0
-                    at sInc.len, dd 3
+INS_LDB         istruc sIns
+                    at sIns.str, db "LDB", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x68
                 iend
 
-INS_LDT        istruc sInc
-                    at sInc.str, db "LDT", 0
-                    at sInc.len, dd 3
+INS_LDCH        istruc sIns
+                    at sIns.str, db "LDCH", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x50
                 iend
 
-INS_STA        istruc sInc
-                    at sInc.str, db "STL", 0
-                    at sInc.len, dd 3
+INS_LDX         istruc sIns
+                    at sIns.str, db "LDX", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x04
                 iend
 
-INS_STX        istruc sInc
-                    at sInc.str, db "STX", 0
-                    at sInc.len, dd 3
+INS_LDT         istruc sIns
+                    at sIns.str, db "LDT", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x74
                 iend
 
-INS_STL        istruc sInc
-                    at sInc.str, db "STL", 0
-                    at sInc.len, dd 3
+INS_STA         istruc sIns
+                    at sIns.str, db "STA", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x0C
                 iend
 
-INS_J        istruc sInc
-                    at sInc.str, db "J", 0
-                    at sInc.len, dd 3
+INS_STCH        istruc sIns
+                    at sIns.str, db "STCH", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x54
                 iend
 
-INS_JEQ        istruc sInc
-                    at sInc.str, db "JEQ", 0
-                    at sInc.len, dd 3
+INS_STX         istruc sIns
+                    at sIns.str, db "STX", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x10
                 iend
 
-INS_JSUB        istruc sInc
-                    at sInc.str, db "JSUB", 0
-                    at sInc.len, dd 3
+INS_STL         istruc sIns
+                    at sIns.str, db "STL", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x14
+                iend
+
+INS_J           istruc sIns
+                    at sIns.str, db "J", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x3C
+                iend
+
+INS_JEQ         istruc sIns
+                    at sIns.str, db "JEQ", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x30
+                iend
+
+INS_JLT         istruc sIns
+                    at sIns.str, db "JLT", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x38
+                iend
+
+INS_JSUB        istruc sIns
+                    at sIns.str, db "JSUB", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x48
+                iend
+
+INS_RSUB        istruc sIns
+                    at sIns.str, db "RSUB", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x4C
+                iend
+
+INS_COMP        istruc sIns
+                    at sIns.str, db "COMP", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x28
+                iend
+
+INS_TD          istruc sIns
+                    at sIns.str, db "TD", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0xE0
+                iend
+
+INS_RD          istruc sIns
+                    at sIns.str, db "RD", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0xD8
+                iend
+
+INS_WD          istruc sIns
+                    at sIns.str, db "WD", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0xDC
+                iend
+
+INS_TIX         istruc sIns
+                    at sIns.str, db "TIX", 0
+                    at sIns.len, dq 3
+                    at sIns.ins, db 0x2C
+                iend
+
+INS_COMPR        istruc sIns
+                    at sIns.str, db "COMPR", 0
+                    at sIns.len, dq 2
+                    at sIns.ins, db 0xA0
+                iend
+
+INS_TIXR        istruc sIns
+                    at sIns.str, db "TIXR", 0
+                    at sIns.len, dq 2
+                    at sIns.ins, db 0xB8
+                iend
+
+INS_CLEAR       istruc sIns
+                    at sIns.str, db "CLEAR", 0
+                    at sIns.len, dq 2
+                    at sIns.ins, db 0xB4
+                iend
+
+INS_PLDT        istruc sIns
+                    at sIns.str, db "+LDT", 0
+                    at sIns.len, dq 4
+                    at sIns.ins, db 0x74
+                iend
+
+INS_PJSUB       istruc sIns
+                    at sIns.str, db "+JSUB", 0
+                    at sIns.len, dq 4
+                    at sIns.ins, db 0x48
                 iend
 
 
@@ -125,7 +246,7 @@ chk_ins:
     mov rax, INS_ARR
     mov rsi, idx
     mov rdi, [rax + rsi * 8]
-    lea rsi, [rdi + sInc.str]
+    lea rsi, [rdi + sIns.str]
     mov rdi, str
     call strncmp wrt ..plt
 
@@ -142,7 +263,7 @@ chk_ins:
     leave
     ret
 
-get_inc_len:
+get_ins_len:
     %define idx     qword [rbp - 0x10]
 
     push rbp
@@ -153,7 +274,7 @@ get_inc_len:
     mov rax, INS_ARR
     mov rsi, idx
     mov rdi, [rax + rsi * 8]
-    mov rax, [rdi + sInc.len]
+    mov rax, [rdi + sIns.len]
 
     leave
     ret
