@@ -21,7 +21,7 @@ print_sym:
     sub rsp, 0x10
 
     mov rsi, qword [symcnt]
-    mov rdi, fmt_str2
+    mov rdi, fmt_d10
     call printf
 
     mov rdi, str_sym

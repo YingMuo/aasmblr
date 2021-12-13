@@ -9,37 +9,37 @@ endstruc
 
 section .data
 
-INS_ARR         dq INS_BYTE
-                dq INS_WORD
-                dq INS_RESB
-                dq INS_RESW
-                dq INS_START
-                dq INS_END
-                dq INS_BASE
-                dq INS_LDA
-                dq INS_LDB
-                dq INS_LDCH
-                dq INS_LDX
-                dq INS_LDT
-                dq INS_STA
-                dq INS_STCH
-                dq INS_STX
-                dq INS_STL
-                dq INS_J
-                dq INS_JEQ
-                dq INS_JLT
-                dq INS_JSUB
-                dq INS_RSUB
-                dq INS_COMP
-                dq INS_TD
-                dq INS_RD
-                dq INS_WD
-                dq INS_TIX
-                dq INS_COMPR
-                dq INS_TIXR
-                dq INS_CLEAR
-                dq INS_PLDT
-                dq INS_PJSUB
+INS_ARR         dq INS_BYTE  ;  0
+                dq INS_WORD  ;  1
+                dq INS_RESB  ;  2
+                dq INS_RESW  ;  3
+                dq INS_START ;  4
+                dq INS_END   ;  5
+                dq INS_BASE  ;  6
+                dq INS_LDA   ;  7
+                dq INS_LDB   ;  8
+                dq INS_LDCH  ;  9
+                dq INS_LDX   ; 10
+                dq INS_LDT   ; 11
+                dq INS_STA   ; 12
+                dq INS_STCH  ; 13
+                dq INS_STX   ; 14
+                dq INS_STL   ; 15
+                dq INS_J     ; 16
+                dq INS_JEQ   ; 17
+                dq INS_JLT   ; 18
+                dq INS_JSUB  ; 19
+                dq INS_RSUB  ; 20
+                dq INS_COMP  ; 21
+                dq INS_TD    ; 22
+                dq INS_RD    ; 23
+                dq INS_WD    ; 24
+                dq INS_TIX   ; 25
+                dq INS_COMPR ; 26
+                dq INS_TIXR  ; 27
+                dq INS_CLEAR ; 28
+                dq INS_PLDT  ; 29
+                dq INS_PJSUB ; 30
 
 INS_BYTE        istruc sIns
                     at sIns.str, db "BYTE", 0
