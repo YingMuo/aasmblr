@@ -17,6 +17,7 @@ extern strcpy
 extern strncpy
 extern memset
 extern memcpy
+extern memcmp
 extern atoi
 extern sprintf
 extern fopen
@@ -33,14 +34,20 @@ input_str:
     db "input: ", 0
 fmt_d10:
     db "%d", 10, 0
+fmt_x10:
+    db "%x", 10, 0
 fmt_sym:
     db "str: %s, addr: %d", 10, 0
 fmt_objhdr:
-    db "hdr: %c%6s%6s%6s", 10, 0
+    db "%c%s%s%s", 10, 0
 fmt_objend:
-    db "end: %c%6s", 10, 0
+    db "%c%s", 10, 0
+fmt_objtxt:
+    db "%c%s%s%s", 10, 0
+fmt_objmdfy:
+    db "%c%s%s", 10, 0
 delim:
-    db 9, 0 ; str of tab
+    db 9, 0x20, 0 ; str of tab
 str_ins:
     db "ins", 0
 str_sym:
@@ -112,11 +119,11 @@ main:
     call fopen
     mov qword [input_file], rax
 
-    ; mov rax, argv
-    ; mov rdi, qword [rax + 8 * 2]
-    ; mov rsi, mode_w
-    ; call fopen
-    ; mov qword [output_file], rax
+    mov rax, argv
+    mov rdi, qword [rax + 8 * 2]
+    mov rsi, mode_w
+    call fopen
+    mov qword [output_file], rax
 
     call stg1
 
@@ -128,8 +135,8 @@ main:
     mov rdi, qword [input_file]
     call fclose
 
-    ; mov rdi, qword [output_file]
-    ; call fclose
+    mov rdi, qword [output_file]
+    call fclose
 
     leave
     ret
@@ -138,11 +145,14 @@ stg1:
     %define idx     qword [rbp - 0x8]
     %define tok     qword [rbp - 0x10]
     %define ins_id  qword [rbp - 0x18]
-    %define buf     [rbp - 0x60]
+    %define tmp     qword [rbp - 0x20]
+    %define var     qword [rbp - 0x28]
+    %define is_b    qword [rbp - 0x30]
+    %define buf     [rbp - 0x70]
 
     push rbp
     mov rbp, rsp
-    sub rsp, 0x60
+    sub rsp, 0x70
     mov qword [symcnt], 0
     mov qword [addrcnt], 0
 
@@ -197,7 +207,7 @@ stg1:
     mov rsi, qword [addrcnt]
     call add_sym
 
-    call print_sym
+    ; call print_sym
 
     xor rdi, rdi
     mov rsi, delim
@@ -227,7 +237,49 @@ stg1:
     mov rax, ins_id
     test rax, rax
     jne .addword
-    add qword [addrcnt], 0x1
+    xor rdi, rdi
+    mov rsi, delim
+    call strtok
+    mov tmp, rax
+
+    mov rdi, tmp
+    mov rsi, str_X
+    mov rdx, 2
+    call strncmp
+    test rax, rax
+    jne .byte_char
+    mov is_b, 0
+.byte_cnt:
+    mov rdi, tmp
+    add rdi, 2
+    mov var, rdi
+    mov rsi, 0x27
+    call strchr
+    test rax, rax
+    mov rsi, __LINE__
+    je err
+    mov byte [rax], 0
+    mov rdi, var
+    call strlen
+    jmp .check_b
+.byte_char:
+    mov rdi, tmp
+    mov rsi, str_C
+    mov rdx, 2
+    call strncmp
+    test rax, rax
+    mov rsi, __LINE__
+    jne err
+    mov is_b, 1
+    jmp .byte_cnt
+
+.check_b:
+    mov rdi, is_b
+    test rdi, rdi
+    jne .set_addrcnt
+    shr rax, 1
+.set_addrcnt:
+    add qword [addrcnt], rax
     jmp .loop
 
 .addword:
@@ -289,16 +341,18 @@ stg2:
     %define ins     qword [rbp - 0x18]
     %define var     qword [rbp - 0x20]
     %define ins_id  qword [rbp - 0x28]
-    %define buf     [rbp - 0x70]
+    %define tmp     [rbp - 0x30]
+    %define buf     [rbp - 0x90]
 
     push rbp
     mov rbp, rsp
-    sub rsp, 0x70
+    sub rsp, 0x90
     mov qword [pc], 0
     mov qword [b], 0
     mov qword [txtcnt], 0
     mov qword [txtrcrdcnt], 0
     mov qword [txtpc], 0
+    mov qword [mdfyrcrdcnt], 0
 
 .loop:
     ; mov rdi, input_str
@@ -325,26 +379,42 @@ stg2:
     ; lea rdi, buf
     ; call puts wrt ..plt
 .no_strip:
+    mov idx, 0
     lea rdi, buf
     mov rsi, delim
     call strtok
-
-    lea rdi, buf
-    cmp byte [rdi], 9
-    je .over_sym
-    
-    mov label, rax
-
+    jmp .loop7
+.loop6:
+    lea rdi, tmp
+    mov rsi, idx
+    mov qword [rdi + rsi * 8], rax
+    add idx, 0x1
     xor rdi, rdi
     mov rsi, delim
     call strtok
+.loop7:
+    test rax, rax
+    jne .loop6
 
-.over_sym:
-    ; mov rdi, tok
-    ; call puts
-
+    lea rdi, tmp
+    cmp idx, 0x3
+    jne .over_sym
+    mov rax, qword [rdi]
+    mov label, rax
+    mov rax, qword [rdi + 8]
     mov ins, rax
-
+    mov rax, qword [rdi + 8*2]
+    mov var, rax
+    jmp .chk_ins_good
+.over_sym:
+    cmp idx, 0x2
+    jne .no_var
+    mov rax, qword [rdi + 8]
+    mov var, rax
+.no_var:
+    mov rax, qword [rdi]
+    mov ins, rax
+.chk_ins_good:
     mov rdi, ins
     call chk_ins
     cmp rax, 0xffffffffffffffff
@@ -357,19 +427,26 @@ stg2:
     ; mov rdi, fmt_d10
     ; call printf
 
-    xor rdi, rdi
-    mov rsi, delim
-    call strtok
-    mov var, rax
-
+.switch_ins:
     mov rdx, ins_id
     mov rax, jmptable
     jmp [rax + rdx * 8]
 
 .LBYTE:
+    mov rdi, var
+    call set_txt_byte
+    jmp .loop
 .LWORD:
 .LRESB:
+    mov rdi, var
+    mov rsi, 1
+    call set_txt_res
+    jmp .loop
 .LRESW:
+    mov rdi, var
+    mov rsi, 3
+    call set_txt_res
+    jmp .loop
 .LSTART:
     mov rdi, label
     mov rsi, ins
@@ -384,7 +461,19 @@ stg2:
     jmp .end
 .LBASE:
     mov rdi, var
+    mov al, byte [rdi]
+    cmp al, 0x30
+    jl .not_num
+    cmp al, 0x39
+    jg .not_num
     call atoi
+    jmp .set_base
+.not_num:
+    call chk_sym
+    mov rdi, symtab
+    shl rax, 5 ; idx * symsz
+    mov rax, [rdi + rax + sSym.addr]
+.set_base:
     mov qword [b], rax
     jmp .loop
 .LLDA:
@@ -399,59 +488,99 @@ stg2:
 .LJ:
 .LJEQ:
 .LJLT:
-.LRSUB:
 .LCOMP:
 .LTD:
 .LRD:
 .LWD:
 .LTIX:
+.LPLDT:
     mov rdi, ins
     mov rsi, var
-    call set_txt_fmt3
+    call set_txt_fmt34
     jmp .loop
 .LCLEAR:
 .LCOMPR:
 .LTIXR:
-
-.LPLDT:
-
+    mov rdi, ins
+    mov rsi, var
+    call set_txt_fmt2
+    jmp .loop
 .LJSUB:
 .LPJSUB:
+    mov rdi, ins
+    mov rsi, var
+    call set_txt_fmt34
+    mov rdi, ins
+    call set_mdfyrcrd
+    jmp .loop
+.LRSUB:
+    mov rdi, ins
+    call set_txt_rsub
+    jmp .loop
 
 .end:
     mov rax, hdrrcrd
     movzx eax, byte [rax + sHdrRcrd.head]
     movsx eax, al
-    mov esi, eax
+    mov edx, eax
     mov rax, hdrrcrd
-    lea rdx, [rax + sHdrRcrd.name]
-    lea rcx, [rax + sHdrRcrd.saddr]
-    lea r8, [rax + sHdrRcrd.len]
-    mov rdi, fmt_objhdr
-    call printf
+    lea rcx, [rax + sHdrRcrd.name]
+    lea r8, [rax + sHdrRcrd.saddr]
+    lea r9, [rax + sHdrRcrd.len]
+    mov rsi, fmt_objhdr
+    mov rdi, qword [output_file]
+    call fprintf
 
     mov idx, 0
     jmp .loop4
 .loop3:
     mov rax, txtrcrd
-    mov rdi, qword [txtrcrdcnt]
+    mov rdi, idx
     shl rdi, 7
-    lea rdi, [rax + rdi + sTxtRcrd.code]
-    call puts
+    mov cl, byte [rax + rdi + sTxtRcrd.head]
+    movsx ecx, cl
+    mov edx, ecx
+    lea rcx, [rax + rdi + sTxtRcrd.saddr]
+    lea r8, [rax + rdi + sTxtRcrd.len]
+    lea r9, [rax + rdi + sTxtRcrd.code]
+    mov rsi, fmt_objtxt
+    mov rdi, qword [output_file]
+    call fprintf
     add idx, 1
 .loop4:
     mov rax, idx
     cmp rax, qword [txtrcrdcnt]
-    jle .loop3
+    jl .loop3
+
+    mov idx, 0
+    jmp .loop9
+.loop8:
+    mov rax, mdfyrcrd
+    mov rdi, idx
+    shl rdi, 4
+    mov cl, byte [rax + rdi + sMdfyRcrd.head]
+    movsx ecx, cl
+    mov edx, ecx
+    lea rcx, [rax + rdi + sMdfyRcrd.sloc]
+    lea r8, [rax + rdi + sMdfyRcrd.len]
+    mov rsi, fmt_objmdfy
+    mov rdi, qword [output_file]
+    call fprintf
+    add idx, 1
+.loop9:
+    mov rax, idx
+    cmp rax, qword [mdfyrcrdcnt]
+    jl .loop8
 
     mov rax, endrcrd
     movzx eax, byte [rax + sEndRcrd.head]
     movsx eax, al
-    mov esi, eax
+    mov edx, eax
     mov rax, endrcrd
-    lea rdx, [rax + sEndRcrd.saddr]
-    mov rdi, fmt_objend
-    call printf
+    lea rcx, [rax + sEndRcrd.saddr]
+    mov rsi, fmt_objend
+    mov rdi, qword [output_file]
+    call fprintf
 .leave:
     leave
     ret
