@@ -24,6 +24,7 @@ extern fclose
 extern rewind
 extern fprintf
 extern fscanf
+extern exit
 
 
 section .data
@@ -90,8 +91,6 @@ input_file:
 output_file:
     resq 1
 addrcnt:
-    resq 1
-addrcnt2:
     resq 1
 
 
@@ -295,7 +294,11 @@ stg2:
     push rbp
     mov rbp, rsp
     sub rsp, 0x70
-    mov qword [addrcnt2], 0
+    mov qword [pc], 0
+    mov qword [b], 0
+    mov qword [txtcnt], 0
+    mov qword [txtrcrdcnt], 0
+    mov qword [txtpc], 0
 
 .loop:
     ; mov rdi, input_str
@@ -314,11 +317,14 @@ stg2:
     call strlen
     sub rax, 0x1
     lea rdi, buf
+    mov dl, byte [rdi + rax]
+    cmp dl, 10
+    jne .no_strip
     mov byte [rdi + rax], 0
 
     ; lea rdi, buf
     ; call puts wrt ..plt
-
+.no_strip:
     lea rdi, buf
     mov rsi, delim
     call strtok
@@ -343,7 +349,7 @@ stg2:
     call chk_ins
     cmp rax, 0xffffffffffffffff
     mov rsi, __LINE__
-    je .err
+    je err
 
     mov ins_id, rax
 
@@ -373,10 +379,14 @@ stg2:
     jmp .loop
 .LEND:
     mov rdi, ins
-    mov rdx, var
+    mov rsi, var
     call set_endrcrd
     jmp .end
 .LBASE:
+    mov rdi, var
+    call atoi
+    mov qword [b], rax
+    jmp .loop
 .LLDA:
 .LLDB:
 .LLDCH:
@@ -389,17 +399,23 @@ stg2:
 .LJ:
 .LJEQ:
 .LJLT:
-.LJSUB:
 .LRSUB:
 .LCOMP:
 .LTD:
 .LRD:
 .LWD:
 .LTIX:
+    mov rdi, ins
+    mov rsi, var
+    call set_txt_fmt3
+    jmp .loop
+.LCLEAR:
 .LCOMPR:
 .LTIXR:
-.LCLEAR:
+
 .LPLDT:
+
+.LJSUB:
 .LPJSUB:
 
 .end:
@@ -414,6 +430,20 @@ stg2:
     mov rdi, fmt_objhdr
     call printf
 
+    mov idx, 0
+    jmp .loop4
+.loop3:
+    mov rax, txtrcrd
+    mov rdi, qword [txtrcrdcnt]
+    shl rdi, 7
+    lea rdi, [rax + rdi + sTxtRcrd.code]
+    call puts
+    add idx, 1
+.loop4:
+    mov rax, idx
+    cmp rax, qword [txtrcrdcnt]
+    jle .loop3
+
     mov rax, endrcrd
     movzx eax, byte [rax + sEndRcrd.head]
     movsx eax, al
@@ -426,7 +456,8 @@ stg2:
     leave
     ret
 
-.err:
+err:
     mov rdi, str_err
     call printf
-    jmp .leave
+    mov rdi, 0
+    call exit
